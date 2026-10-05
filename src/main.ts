@@ -29,10 +29,10 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = Number(process.env.PORT ?? 3000);
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`API: http://localhost:${port}/api`);
-  console.log(`Swagger: http://localhost:${port}/api/docs`);
+  console.log(`API: http://0.0.0.0:${port}/api`);
+  console.log(`Swagger: http://0.0.0.0:${port}/api/docs`);
 }
 
 bootstrap();
