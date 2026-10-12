@@ -20,20 +20,42 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Furniture Store API')
     .setDescription(
-      'Training API for Products, Categories, Cart, JWT Authentication and Roles.',
+      'Training API for Products, Categories, Cart, Authentication and Roles.',
     )
     .setVersion('2.0')
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  const document = SwaggerModule.createDocument(
+    app,
+    swaggerConfig,
+  );
 
-  const port = Number(process.env.PORT ?? 3000);
-  await app.listen(port, '0.0.0.0');
+  SwaggerModule.setup(
+    'api/docs',
+    app,
+    document,
+  );
 
-  console.log(`API: http://0.0.0.0:${port}/api`);
-  console.log(`Swagger: http://0.0.0.0:${port}/api/docs`);
+  const port = Number(
+    process.env.PORT || 3000,
+  );
+
+  await app.listen(
+    port,
+    '0.0.0.0',
+  );
+
+  console.log(
+    `API listening on 0.0.0.0:${port}`,
+  );
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error(
+    'BOOTSTRAP_ERROR',
+    error,
+  );
+
+  process.exit(1);
+});
