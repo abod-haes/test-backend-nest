@@ -2,28 +2,20 @@
 
 Simple NestJS + Prisma training backend for the React course.
 
-## Important deployment setting
-
-SQLite uses an absolute runtime path:
+## Production environment
 
 ```env
-DATABASE_URL="file:/data/dev.db"
 PORT=3000
+DATABASE_URL=file:/data/dev.db
 ```
 
-Do not use:
-
-```env
-DATABASE_URL="file:./data/dev.db"
-```
-
-because Prisma resolves relative SQLite paths from the Prisma schema location, not from the container root.
-
-The Docker container explicitly creates `/data` and uses:
+The container now starts Nest directly:
 
 ```text
-file:/data/dev.db
+node dist/main.js
 ```
+
+Database schema changes should be applied separately from application startup. This prevents a Prisma setup error from killing the whole API and producing a reverse-proxy 502.
 
 ## Health
 
@@ -31,7 +23,13 @@ file:/data/dev.db
 GET /api/health
 ```
 
-## Authentication
+## Swagger
+
+```text
+GET /api/docs
+```
+
+## Auth
 
 ```text
 POST /api/auth/register
@@ -52,8 +50,23 @@ student@example.com
 Student123!
 ```
 
-## Swagger
+## Public reads
 
 ```text
-/api/docs
+GET /api/products
+GET /api/products/:id
+GET /api/categories
+GET /api/categories/:id
+```
+
+## ADMIN mutations
+
+```text
+POST   /api/products
+PATCH  /api/products/:id
+DELETE /api/products/:id
+
+POST   /api/categories
+PATCH  /api/categories/:id
+DELETE /api/categories/:id
 ```
