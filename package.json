@@ -12,7 +12,8 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio",
-    "setup": "prisma generate && prisma db push && prisma db seed"
+    "setup": "prisma generate && prisma db push && prisma db seed",
+    "db:setup": "prisma db push && prisma db seed"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
