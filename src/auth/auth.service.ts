@@ -3,7 +3,6 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import {
@@ -16,26 +15,47 @@ import {
 } from './roles';
 import { TokenService } from './token.service';
 
+type TrainingUser = {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  createdAt: Date;
+};
+
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly prisma:
-      PrismaService,
+  private users: TrainingUser[] = [
+    {
+      id: 1,
+      name: 'Training Admin',
+      email: 'admin@example.com',
+      password: hashPassword('Admin123!'),
+      role: USER_ROLES.ADMIN,
+      createdAt: new Date(),
+    },
+    {
+      id: 2,
+      name: 'Training Student',
+      email: 'student@example.com',
+      password: hashPassword('Student123!'),
+      role: USER_ROLES.USER,
+      createdAt: new Date(),
+    },
+  ];
 
+  constructor(
     private readonly tokenService:
       TokenService,
   ) {}
 
-  async register(
-    dto: RegisterDto,
-  ) {
+  register(dto: RegisterDto) {
     const existingUser =
-      await this.prisma.user
-        .findUnique({
-          where: {
-            email: dto.email,
-          },
-        });
+      this.users.find(
+        (user) =>
+          user.email === dto.email,
+      );
 
     if (existingUser) {
       throw new ConflictException(
@@ -43,36 +63,40 @@ export class AuthService {
       );
     }
 
-    const user =
-      await this.prisma.user
-        .create({
-          data: {
-            name: dto.name,
-            email: dto.email,
-            password:
-              hashPassword(
-                dto.password,
-              ),
-            role:
-              USER_ROLES.USER,
-          },
-        });
+    const user: TrainingUser = {
+      id:
+        Math.max(
+          0,
+          ...this.users.map(
+            (item) => item.id,
+          ),
+        ) + 1,
+
+      name: dto.name,
+      email: dto.email,
+      password:
+        hashPassword(
+          dto.password,
+        ),
+      role:
+        USER_ROLES.USER,
+      createdAt: new Date(),
+    };
+
+    this.users.push(user);
 
     return this.createAuthResponse(
       user,
     );
   }
 
-  async login(
-    dto: LoginDto,
-  ) {
+  login(dto: LoginDto) {
     const user =
-      await this.prisma.user
-        .findUnique({
-          where: {
-            email: dto.email,
-          },
-        });
+      this.users.find(
+        (item) =>
+          item.email ===
+          dto.email,
+      );
 
     if (
       !user ||
@@ -91,45 +115,37 @@ export class AuthService {
     );
   }
 
-  async me(
-    userId: number,
-  ) {
-    return this.prisma.user
-      .findUniqueOrThrow({
-        where: {
-          id: userId,
-        },
+  me(userId: number) {
+    const user =
+      this.users.find(
+        (item) =>
+          item.id === userId,
+      );
 
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          createdAt: true,
-        },
-      });
+    if (!user) {
+      throw new UnauthorizedException(
+        'User not found',
+      );
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+    };
   }
 
   private createAuthResponse(
-    user: {
-      id: number;
-      name: string;
-      email: string;
-      role: string;
-    },
+    user: TrainingUser,
   ) {
-    const role: UserRole =
-      user.role ===
-      USER_ROLES.ADMIN
-        ? USER_ROLES.ADMIN
-        : USER_ROLES.USER;
-
     const accessToken =
       this.tokenService.sign({
         sub: user.id,
         name: user.name,
         email: user.email,
-        role,
+        role: user.role,
       });
 
     return {
@@ -139,7 +155,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
-        role,
+        role: user.role,
       },
     };
   }
