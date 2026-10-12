@@ -20,9 +20,10 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Furniture Store API')
     .setDescription(
-      'Simple training API for Categories CRUD, Products CRUD and a single Cart.',
+      'Training API for Products, Categories, Cart, JWT Authentication and Roles.',
     )
-    .setVersion('1.0')
+    .setVersion('2.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

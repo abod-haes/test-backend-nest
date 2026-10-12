@@ -8,15 +8,23 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import {
+  ApiBearerAuth,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { FindProductsQueryDto } from './dto/find-products-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -28,21 +36,13 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a product' })
-  @ApiCreatedResponse({
-    description: 'Product created',
-    schema: {
-      example: {
-        id: 1,
-        name: 'Stylish Soft Chair',
-        description: 'A comfortable soft chair for modern living rooms.',
-        price: 20,
-        imageUrl: 'https://placehold.co/600x400?text=Chair',
-        categoryId: 1,
-        category: { id: 1, name: 'Living Room' },
-      },
-    },
-  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a product (ADMIN only)' })
+  @ApiCreatedResponse({ description: 'Product created' })
+  @ApiUnauthorizedResponse({ description: 'Login required' })
+  @ApiForbiddenResponse({ description: 'ADMIN role required' })
   @ApiNotFoundResponse({ description: 'Category not found' })
   create(@Body() dto: CreateProductDto) {
     return this.productsService.create(dto);
@@ -50,31 +50,16 @@ export class ProductsController {
 
   @Get()
   @ApiOperation({
-    summary: 'Get all products',
+    summary: 'Get all products (public)',
     description:
       'Use categoryId to filter products, for example: /api/products?categoryId=1',
-  })
-  @ApiOkResponse({
-    schema: {
-      example: [
-        {
-          id: 1,
-          name: 'Stylish Soft Chair',
-          description: 'A comfortable soft chair for modern living rooms.',
-          price: 20,
-          imageUrl: 'https://placehold.co/600x400?text=Chair',
-          categoryId: 1,
-          category: { id: 1, name: 'Living Room' },
-        },
-      ],
-    },
   })
   findAll(@Query() query: FindProductsQueryDto) {
     return this.productsService.findAll(query.categoryId);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get one product' })
+  @ApiOperation({ summary: 'Get one product (public)' })
   @ApiParam({ name: 'id', example: 1 })
   @ApiNotFoundResponse({ description: 'Product not found' })
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -82,9 +67,14 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a product' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a product (ADMIN only)' })
   @ApiParam({ name: 'id', example: 1 })
   @ApiOkResponse({ description: 'Product updated' })
+  @ApiUnauthorizedResponse({ description: 'Login required' })
+  @ApiForbiddenResponse({ description: 'ADMIN role required' })
   @ApiNotFoundResponse({ description: 'Product or category not found' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -94,11 +84,16 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a product' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a product (ADMIN only)' })
   @ApiParam({ name: 'id', example: 1 })
   @ApiOkResponse({
     schema: { example: { message: 'Product deleted successfully' } },
   })
+  @ApiUnauthorizedResponse({ description: 'Login required' })
+  @ApiForbiddenResponse({ description: 'ADMIN role required' })
   @ApiNotFoundResponse({ description: 'Product not found' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.remove(id);
