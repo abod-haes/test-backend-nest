@@ -1,8 +1,8 @@
-import { Role } from '@prisma/client';
+import { UserRole } from './roles';
 
 export interface AuthUser {
   sub: number;
   name: string;
   email: string;
-  role: Role;
+  role: UserRole;
 }

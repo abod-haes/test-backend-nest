@@ -1,27 +1,26 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { AuthBootstrapService } from './auth-bootstrap.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
+import { TokenService } from './token.service';
 
 @Module({
-  imports: [
-    JwtModule.register({
-      secret: process.env.JWT_SECRET ?? 'training-jwt-secret',
-      signOptions: {
-        expiresIn: 60 * 60 * 24,
-      },
-    }),
+  controllers: [
+    AuthController,
   ],
-  controllers: [AuthController],
+
   providers: [
     AuthService,
+    TokenService,
     JwtAuthGuard,
     RolesGuard,
+    AuthBootstrapService,
   ],
+
   exports: [
-    JwtModule,
+    TokenService,
     JwtAuthGuard,
     RolesGuard,
   ],

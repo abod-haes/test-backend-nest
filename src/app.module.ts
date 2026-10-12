@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
+import { HealthController } from './health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
 
@@ -12,6 +13,10 @@ import { ProductsModule } from './products/products.module';
     CategoriesModule,
     ProductsModule,
     CartModule,
+  ],
+
+  controllers: [
+    HealthController,
   ],
 })
 export class AppModule {}
