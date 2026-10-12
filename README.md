@@ -1,139 +1,116 @@
 # Furniture Store Training API
 
-A small NestJS backend for students who are learning how to connect a frontend to a real API.
+Simple NestJS + Prisma training backend for a Front-End React course.
 
-It intentionally keeps the project simple:
+## Modules
 
 - Categories CRUD
 - Products CRUD
-- Product description
-- Product category relation
-- Filter products by category
-- Add to cart
-- Change cart quantity
-- Remove from cart
-- Clear cart
-- SQLite database
-- Prisma ORM
-- Swagger with request examples
-- Validation with class-validator
-- No authentication
-- No product colors
-- One shared cart for training purposes
+- Cart
+- JWT Authentication
+- Roles: ADMIN / USER
 
-## Run the project
+## Authentication endpoints
 
-Requirements: Node.js 20+
+```text
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me
+GET  /api/auth/admin
+```
+
+### Seed accounts
+
+```text
+ADMIN
+admin@example.com
+Admin123!
+
+USER
+student@example.com
+Student123!
+```
+
+Register always creates a USER account.
+
+Login returns:
+
+```json
+{
+  "accessToken": "jwt-token",
+  "user": {
+    "id": 1,
+    "name": "Training Admin",
+    "email": "admin@example.com",
+    "role": "ADMIN"
+  }
+}
+```
+
+Protected requests use:
+
+```text
+Authorization: Bearer ACCESS_TOKEN
+```
+
+## Authorization behavior
+
+Public:
+
+```text
+GET /api/products
+GET /api/products/:id
+GET /api/categories
+GET /api/categories/:id
+```
+
+ADMIN only:
+
+```text
+POST   /api/products
+PATCH  /api/products/:id
+DELETE /api/products/:id
+
+POST   /api/categories
+PATCH  /api/categories/:id
+DELETE /api/categories/:id
+```
+
+This gives the Front-End session clear examples for:
+
+```text
+401 → not logged in / invalid token
+403 → logged in but role is not ADMIN
+```
+
+Cart remains unchanged so previous course exercises keep working.
+
+## Setup
 
 ```bash
 npm install
-```
-
-Copy the environment file:
-
-```bash
-cp .env.example .env
-```
-
-On Windows, create `.env` manually and copy the content from `.env.example`.
-
-Prepare the database and seed example furniture data:
-
-```bash
 npm run setup
-```
-
-Start NestJS:
-
-```bash
 npm run start:dev
 ```
 
-## Swagger
+Environment:
 
-Open:
+```env
+DATABASE_URL="file:./dev.db"
+PORT=3000
+JWT_SECRET="training-jwt-secret"
+```
+
+Swagger:
 
 ```text
 http://localhost:3000/api/docs
 ```
 
-Swagger contains examples for the important request bodies.
+For protected endpoints in Swagger:
 
-## Base URL
-
-```text
-http://localhost:3000/api
-```
-
-## Main endpoints
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| POST | /categories | Create category |
-| GET | /categories | Get categories |
-| GET | /categories/:id | Get one category |
-| PATCH | /categories/:id | Update category |
-| DELETE | /categories/:id | Delete category |
-| POST | /products | Create product |
-| GET | /products | Get products |
-| GET | /products?categoryId=1 | Filter products by category |
-| GET | /products/:id | Get one product |
-| PATCH | /products/:id | Update product |
-| DELETE | /products/:id | Delete product |
-| POST | /cart | Add product to cart |
-| GET | /cart | Get cart and totals |
-| PATCH | /cart/:id | Change quantity |
-| DELETE | /cart/:id | Remove item |
-| DELETE | /cart | Clear cart |
-
-## Create category example
-
-```json
-{
-  "name": "Living Room",
-  "description": "Sofas, chairs and living room furniture"
-}
-```
-
-## Create product example
-
-There is no colors field. The product has a simple `description`.
-
-```json
-{
-  "name": "Stylish Soft Chair",
-  "description": "A comfortable soft chair for modern living rooms.",
-  "price": 20,
-  "imageUrl": "https://placehold.co/600x400?text=Chair",
-  "categoryId": 1
-}
-```
-
-## Add to cart example
-
-```json
-{
-  "productId": 1,
-  "quantity": 2
-}
-```
-
-If the same product is added again, the API increases its quantity instead of creating a duplicate cart row.
-
-## Update cart quantity example
-
-```json
-{
-  "quantity": 3
-}
-```
-
-## Suggested frontend flow
-
-1. Call `GET /api/categories` to render category buttons.
-2. Call `GET /api/products` for "All Furniture".
-3. Call `GET /api/products?categoryId=ID` when a category is selected.
-4. Call `POST /api/cart` when the user clicks "Add to cart".
-5. Call `GET /api/cart` to render the cart and totals.
-
-This project is intentionally small so students can focus on HTTP methods, DTOs, controllers, services, Prisma and frontend integration.
+1. Login.
+2. Copy `accessToken`.
+3. Click **Authorize**.
+4. Paste the token.
+5. Test ADMIN-only endpoints.

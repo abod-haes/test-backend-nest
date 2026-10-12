@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -6,6 +7,27 @@ async function main() {
   await prisma.cartItem.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
+  await prisma.user.deleteMany();
+
+  const adminPassword = await bcrypt.hash('Admin123!', 10);
+  const studentPassword = await bcrypt.hash('Student123!', 10);
+
+  await prisma.user.createMany({
+    data: [
+      {
+        name: 'Training Admin',
+        email: 'admin@example.com',
+        password: adminPassword,
+        role: Role.ADMIN,
+      },
+      {
+        name: 'Training Student',
+        email: 'student@example.com',
+        password: studentPassword,
+        role: Role.USER,
+      },
+    ],
+  });
 
   const bedroom = await prisma.category.create({
     data: { name: 'Bedroom', description: 'Furniture for bedrooms' },
@@ -81,6 +103,8 @@ async function main() {
   });
 
   console.log('Seed completed');
+  console.log('Admin: admin@example.com / Admin123!');
+  console.log('User: student@example.com / Student123!');
 }
 
 main()
