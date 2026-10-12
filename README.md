@@ -17,7 +17,9 @@ GET  /api/auth/me
 GET  /api/auth/admin
 ```
 
-Training accounts are created automatically on app startup:
+For this training backend, auth users are intentionally kept in memory so authentication does not affect the existing Products/Categories SQLite database.
+
+Training accounts:
 
 ```text
 ADMIN
@@ -28,6 +30,8 @@ USER
 student@example.com
 Student123!
 ```
+
+Registered users remain available while the server process is running.
 
 ## Authorization
 
@@ -57,24 +61,6 @@ Protected requests use:
 ```text
 Authorization: Bearer ACCESS_TOKEN
 ```
-
-This lets students test:
-
-```text
-401 → missing / invalid token
-403 → valid USER token but ADMIN permission required
-```
-
-## Deployment notes
-
-The Docker container runs:
-
-```bash
-npx prisma db push --accept-data-loss
-npm run start:prod
-```
-
-The auth implementation intentionally uses Node built-in crypto so deployment does not depend on extra JWT/password libraries.
 
 ## Swagger
 
