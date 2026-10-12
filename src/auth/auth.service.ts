@@ -110,7 +110,7 @@ export class AuthService {
   private createAuthResponse(
     user: TrainingUser,
   ) {
-    const accessToken =
+    const token =
       this.tokenService.sign({
         sub: user.id,
         name: user.name,
@@ -119,7 +119,7 @@ export class AuthService {
       });
 
     return {
-      accessToken,
+      token,
 
       user: {
         id: user.id,
