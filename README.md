@@ -2,41 +2,54 @@
 
 Simple NestJS + Prisma training backend for the React course.
 
-## Production startup
+## Important runtime behavior
 
-The image uses a fixed Docker ENTRYPOINT:
-
-```text
-/app/docker-entrypoint.sh
-```
-
-It always performs:
+Dokploy runtime logs showed that the application was being started with:
 
 ```text
-1. ensure /data exists
-2. prisma db push
-3. start Nest with node dist/main.js
+npm run prisma:seed
 ```
 
-This intentionally prevents an external Docker command override from replacing the API process with a one-time command such as `npm run prisma:seed`.
+instead of the normal Nest startup command.
 
-Environment:
+To make the deployment resilient, both supported startup paths now initialize the SQLite schema and then keep the API process running.
+
+### Docker entrypoint
+
+```text
+1. prisma db push
+2. prisma db seed
+3. node dist/main.js
+```
+
+### If Dokploy forces this command
+
+```bash
+npm run prisma:seed
+```
+
+it now performs:
+
+```text
+1. prisma db push
+2. prisma db seed
+3. node dist/main.js
+```
+
+So it no longer exits after seeding.
+
+The seed is idempotent:
+- categories use upsert
+- demo products are created only when there are no products
+- existing CRUD training data is not deleted on every restart
+
+## Environment
 
 ```env
 PORT=3000
 DATABASE_URL=file:/data/dev.db
 JWT_SECRET=training-jwt-secret
 ```
-
-## One-time sample data
-
-Run this manually only when you want to reset and seed the training database:
-
-```bash
-npm run db:setup
-```
-
-Do not use `npm run prisma:seed` as the application's startup command.
 
 ## Health
 

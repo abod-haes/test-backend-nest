@@ -10,10 +10,10 @@
     "start:prod": "node dist/main",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:seed": "prisma db seed",
+    "prisma:seed": "prisma db push --skip-generate && prisma db seed && node dist/main.js",
     "prisma:studio": "prisma studio",
     "setup": "prisma generate && prisma db push && prisma db seed",
-    "db:setup": "prisma db push && prisma db seed"
+    "db:setup": "prisma db push --skip-generate && prisma db seed"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
