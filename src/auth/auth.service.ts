@@ -1,10 +1,8 @@
 import {
-  ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 import {
   hashPassword,
   verifyPassword,
@@ -26,21 +24,29 @@ type TrainingUser = {
 
 @Injectable()
 export class AuthService {
-  private users: TrainingUser[] = [
+  private readonly users: TrainingUser[] = [
     {
       id: 1,
       name: 'Training Admin',
       email: 'admin@example.com',
-      password: hashPassword('Admin123!'),
-      role: USER_ROLES.ADMIN,
+      password:
+        hashPassword(
+          'Admin123!',
+        ),
+      role:
+        USER_ROLES.ADMIN,
       createdAt: new Date(),
     },
     {
       id: 2,
       name: 'Training Student',
       email: 'student@example.com',
-      password: hashPassword('Student123!'),
-      role: USER_ROLES.USER,
+      password:
+        hashPassword(
+          'Student123!',
+        ),
+      role:
+        USER_ROLES.USER,
       createdAt: new Date(),
     },
   ];
@@ -50,47 +56,9 @@ export class AuthService {
       TokenService,
   ) {}
 
-  register(dto: RegisterDto) {
-    const existingUser =
-      this.users.find(
-        (user) =>
-          user.email === dto.email,
-      );
-
-    if (existingUser) {
-      throw new ConflictException(
-        'Email already exists',
-      );
-    }
-
-    const user: TrainingUser = {
-      id:
-        Math.max(
-          0,
-          ...this.users.map(
-            (item) => item.id,
-          ),
-        ) + 1,
-
-      name: dto.name,
-      email: dto.email,
-      password:
-        hashPassword(
-          dto.password,
-        ),
-      role:
-        USER_ROLES.USER,
-      createdAt: new Date(),
-    };
-
-    this.users.push(user);
-
-    return this.createAuthResponse(
-      user,
-    );
-  }
-
-  login(dto: LoginDto) {
+  login(
+    dto: LoginDto,
+  ) {
     const user =
       this.users.find(
         (item) =>
@@ -115,7 +83,9 @@ export class AuthService {
     );
   }
 
-  me(userId: number) {
+  me(
+    userId: number,
+  ) {
     const user =
       this.users.find(
         (item) =>
