@@ -2,54 +2,54 @@
 
 Simple NestJS + Prisma training backend for the React course.
 
-## Important runtime behavior
+## Auth for this session
 
-Dokploy runtime logs showed that the application was being started with:
-
-```text
-npm run prisma:seed
-```
-
-instead of the normal Nest startup command.
-
-To make the deployment resilient, both supported startup paths now initialize the SQLite schema and then keep the API process running.
-
-### Docker entrypoint
+Only two auth endpoints are exposed:
 
 ```text
-1. prisma db push
-2. prisma db seed
-3. node dist/main.js
+POST /api/auth/login
+GET  /api/auth/me
 ```
 
-### If Dokploy forces this command
-
-```bash
-npm run prisma:seed
-```
-
-it now performs:
+Training accounts:
 
 ```text
-1. prisma db push
-2. prisma db seed
-3. node dist/main.js
+ADMIN
+admin@example.com
+Admin123!
+
+USER
+student@example.com
+Student123!
 ```
 
-So it no longer exits after seeding.
+Login returns:
 
-The seed is idempotent:
-- categories use upsert
-- demo products are created only when there are no products
-- existing CRUD training data is not deleted on every restart
-
-## Environment
-
-```env
-PORT=3000
-DATABASE_URL=file:/data/dev.db
-JWT_SECRET=training-jwt-secret
+```json
+{
+  "accessToken": "token",
+  "user": {
+    "id": 1,
+    "name": "Training Admin",
+    "email": "admin@example.com",
+    "role": "ADMIN"
+  }
+}
 ```
+
+Use the token with:
+
+```text
+Authorization: Bearer ACCESS_TOKEN
+```
+
+Then call:
+
+```text
+GET /api/auth/me
+```
+
+Register and the separate /auth/admin demo endpoint are intentionally removed to keep the frontend authentication lesson focused.
 
 ## Health
 
@@ -63,23 +63,25 @@ GET /api/health
 GET /api/docs
 ```
 
-## Auth
+## Products and Categories
+
+Public reads:
 
 ```text
-POST /api/auth/register
-POST /api/auth/login
-GET  /api/auth/me
-GET  /api/auth/admin
+GET /api/products
+GET /api/products/:id
+GET /api/categories
+GET /api/categories/:id
 ```
 
-Training accounts:
+ADMIN mutations remain protected:
 
 ```text
-ADMIN
-admin@example.com
-Admin123!
+POST   /api/products
+PATCH  /api/products/:id
+DELETE /api/products/:id
 
-USER
-student@example.com
-Student123!
+POST   /api/categories
+PATCH  /api/categories/:id
+DELETE /api/categories/:id
 ```
