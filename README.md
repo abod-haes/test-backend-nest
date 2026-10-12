@@ -1,16 +1,14 @@
 # Furniture Store Training API
 
-Simple NestJS + Prisma training backend for a Front-End React course.
+Simple NestJS + Prisma training backend for the React course.
 
-## Modules
+## Health
 
-- Categories CRUD
-- Products CRUD
-- Cart
-- JWT Authentication
-- Roles: ADMIN / USER
+```text
+GET /api/health
+```
 
-## Authentication endpoints
+## Authentication
 
 ```text
 POST /api/auth/register
@@ -19,7 +17,7 @@ GET  /api/auth/me
 GET  /api/auth/admin
 ```
 
-### Seed accounts
+Training accounts are created automatically on app startup:
 
 ```text
 ADMIN
@@ -31,29 +29,7 @@ student@example.com
 Student123!
 ```
 
-Register always creates a USER account.
-
-Login returns:
-
-```json
-{
-  "accessToken": "jwt-token",
-  "user": {
-    "id": 1,
-    "name": "Training Admin",
-    "email": "admin@example.com",
-    "role": "ADMIN"
-  }
-}
-```
-
-Protected requests use:
-
-```text
-Authorization: Bearer ACCESS_TOKEN
-```
-
-## Authorization behavior
+## Authorization
 
 Public:
 
@@ -76,41 +52,32 @@ PATCH  /api/categories/:id
 DELETE /api/categories/:id
 ```
 
-This gives the Front-End session clear examples for:
+Protected requests use:
 
 ```text
-401 → not logged in / invalid token
-403 → logged in but role is not ADMIN
+Authorization: Bearer ACCESS_TOKEN
 ```
 
-Cart remains unchanged so previous course exercises keep working.
+This lets students test:
 
-## Setup
+```text
+401 → missing / invalid token
+403 → valid USER token but ADMIN permission required
+```
+
+## Deployment notes
+
+The Docker container runs:
 
 ```bash
-npm install
-npm run setup
-npm run start:dev
+npx prisma db push --accept-data-loss
+npm run start:prod
 ```
 
-Environment:
+The auth implementation intentionally uses Node built-in crypto so deployment does not depend on extra JWT/password libraries.
 
-```env
-DATABASE_URL="file:./dev.db"
-PORT=3000
-JWT_SECRET="training-jwt-secret"
-```
-
-Swagger:
+## Swagger
 
 ```text
-http://localhost:3000/api/docs
+/api/docs
 ```
-
-For protected endpoints in Swagger:
-
-1. Login.
-2. Copy `accessToken`.
-3. Click **Authorize**.
-4. Paste the token.
-5. Test ADMIN-only endpoints.
