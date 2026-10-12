@@ -2,6 +2,29 @@
 
 Simple NestJS + Prisma training backend for the React course.
 
+## Important deployment setting
+
+SQLite uses an absolute runtime path:
+
+```env
+DATABASE_URL="file:/data/dev.db"
+PORT=3000
+```
+
+Do not use:
+
+```env
+DATABASE_URL="file:./data/dev.db"
+```
+
+because Prisma resolves relative SQLite paths from the Prisma schema location, not from the container root.
+
+The Docker container explicitly creates `/data` and uses:
+
+```text
+file:/data/dev.db
+```
+
 ## Health
 
 ```text
@@ -17,8 +40,6 @@ GET  /api/auth/me
 GET  /api/auth/admin
 ```
 
-For this training backend, auth users are intentionally kept in memory so authentication does not affect the existing Products/Categories SQLite database.
-
 Training accounts:
 
 ```text
@@ -29,37 +50,6 @@ Admin123!
 USER
 student@example.com
 Student123!
-```
-
-Registered users remain available while the server process is running.
-
-## Authorization
-
-Public:
-
-```text
-GET /api/products
-GET /api/products/:id
-GET /api/categories
-GET /api/categories/:id
-```
-
-ADMIN only:
-
-```text
-POST   /api/products
-PATCH  /api/products/:id
-DELETE /api/products/:id
-
-POST   /api/categories
-PATCH  /api/categories/:id
-DELETE /api/categories/:id
-```
-
-Protected requests use:
-
-```text
-Authorization: Bearer ACCESS_TOKEN
 ```
 
 ## Swagger
