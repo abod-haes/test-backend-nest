@@ -1,108 +1,277 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Injectable()
 export class CartService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
 
-  async add(dto: AddToCartDto) {
-    const product = await this.prisma.product.findUnique({
-      where: { id: dto.productId },
-    });
+  async add(
+    userId: number,
+    dto: AddToCartDto,
+  ) {
+    const product =
+      await this.prisma.product.findUnique({
+        where: {
+          id: dto.productId,
+        },
+      });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException(
+        'Product not found',
+      );
     }
 
-    const quantity = dto.quantity ?? 1;
+    const quantity =
+      dto.quantity ?? 1;
 
-    const existingItem = await this.prisma.cartItem.findUnique({
-      where: { productId: dto.productId },
-    });
+    const existingItem =
+      await this.prisma.userCartItem.findUnique({
+        where: {
+          userId_productId: {
+            userId,
+            productId:
+              dto.productId,
+          },
+        },
+      });
+
+    const nextQuantity =
+      (existingItem?.quantity ?? 0) +
+      quantity;
+
+    if (
+      nextQuantity >
+      product.stock
+    ) {
+      throw new BadRequestException(
+        'Requested quantity exceeds available stock',
+      );
+    }
 
     if (existingItem) {
-      return this.prisma.cartItem.update({
-        where: { id: existingItem.id },
-        data: { quantity: existingItem.quantity + quantity },
+      return this.prisma.userCartItem.update({
+        where: {
+          id: existingItem.id,
+        },
+        data: {
+          quantity:
+            nextQuantity,
+        },
         include: {
           product: {
-            include: { category: true },
+            include: {
+              category: true,
+            },
           },
         },
       });
     }
 
-    return this.prisma.cartItem.create({
+    return this.prisma.userCartItem.create({
       data: {
-        productId: dto.productId,
+        userId,
+        productId:
+          dto.productId,
         quantity,
       },
       include: {
         product: {
-          include: { category: true },
+          include: {
+            category: true,
+          },
         },
       },
     });
   }
 
-  async findAll() {
-    const items = await this.prisma.cartItem.findMany({
-      include: {
-        product: {
-          include: { category: true },
+  async findAll(
+    userId: number,
+  ) {
+    const items =
+      await this.prisma.userCartItem.findMany({
+        where: { userId },
+        include: {
+          product: {
+            include: {
+              category: true,
+            },
+          },
         },
-      },
-      orderBy: { id: 'asc' },
-    });
+        orderBy: {
+          id: 'asc',
+        },
+      });
 
-    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = items.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
-      0,
-    );
+    let totalItems = 0;
+    let subtotal = 0;
+    let discount = 0;
+
+    const detailedItems =
+      items.map((item) => {
+        const baseLineTotal =
+          item.product.price *
+          item.quantity;
+
+        const lineDiscount =
+          baseLineTotal *
+          (item.product
+            .discountPercent /
+            100);
+
+        const lineTotal =
+          baseLineTotal -
+          lineDiscount;
+
+        totalItems +=
+          item.quantity;
+
+        subtotal +=
+          baseLineTotal;
+
+        discount +=
+          lineDiscount;
+
+        return {
+          ...item,
+          unitPrice:
+            item.product.price,
+          discountedUnitPrice:
+            Number(
+              (
+                item.product.price *
+                (1 -
+                  item.product
+                    .discountPercent /
+                    100)
+              ).toFixed(2),
+            ),
+          lineTotal:
+            Number(
+              lineTotal.toFixed(
+                2,
+              ),
+            ),
+        };
+      });
+
+    const totalPrice =
+      subtotal - discount;
 
     return {
-      items,
+      items:
+        detailedItems,
       totalItems,
-      totalPrice: Number(totalPrice.toFixed(2)),
+      subtotal:
+        Number(
+          subtotal.toFixed(2),
+        ),
+      discount:
+        Number(
+          discount.toFixed(2),
+        ),
+      totalPrice:
+        Number(
+          totalPrice.toFixed(
+            2,
+          ),
+        ),
     };
   }
 
-  async update(id: number, dto: UpdateCartItemDto) {
-    const item = await this.prisma.cartItem.findUnique({ where: { id } });
+  async update(
+    userId: number,
+    id: number,
+    dto: UpdateCartItemDto,
+  ) {
+    const item =
+      await this.prisma.userCartItem.findFirst({
+        where: {
+          id,
+          userId,
+        },
+        include: {
+          product: true,
+        },
+      });
 
     if (!item) {
-      throw new NotFoundException('Cart item not found');
+      throw new NotFoundException(
+        'Cart item not found',
+      );
     }
 
-    return this.prisma.cartItem.update({
+    if (
+      dto.quantity >
+      item.product.stock
+    ) {
+      throw new BadRequestException(
+        'Requested quantity exceeds available stock',
+      );
+    }
+
+    return this.prisma.userCartItem.update({
       where: { id },
-      data: { quantity: dto.quantity },
+      data: {
+        quantity:
+          dto.quantity,
+      },
       include: {
         product: {
-          include: { category: true },
+          include: {
+            category: true,
+          },
         },
       },
     });
   }
 
-  async remove(id: number) {
-    const item = await this.prisma.cartItem.findUnique({ where: { id } });
+  async remove(
+    userId: number,
+    id: number,
+  ) {
+    const item =
+      await this.prisma.userCartItem.findFirst({
+        where: {
+          id,
+          userId,
+        },
+      });
 
     if (!item) {
-      throw new NotFoundException('Cart item not found');
+      throw new NotFoundException(
+        'Cart item not found',
+      );
     }
 
-    await this.prisma.cartItem.delete({ where: { id } });
+    await this.prisma.userCartItem.delete({
+      where: { id },
+    });
 
-    return { message: 'Cart item removed successfully' };
+    return {
+      message:
+        'Cart item removed successfully',
+    };
   }
 
-  async clear() {
-    await this.prisma.cartItem.deleteMany();
+  async clear(
+    userId: number,
+  ) {
+    await this.prisma.userCartItem.deleteMany({
+      where: { userId },
+    });
 
-    return { message: 'Cart cleared successfully' };
+    return {
+      message:
+        'Cart cleared successfully',
+    };
   }
 }

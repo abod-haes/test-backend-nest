@@ -3,6 +3,7 @@ import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
 import { HealthController } from './health.controller';
+import { OrdersModule } from './orders/orders.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
 
@@ -13,8 +14,8 @@ import { ProductsModule } from './products/products.module';
     CategoriesModule,
     ProductsModule,
     CartModule,
+    OrdersModule,
   ],
-
   controllers: [
     HealthController,
   ],
