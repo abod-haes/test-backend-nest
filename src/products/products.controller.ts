@@ -27,6 +27,7 @@ import { USER_ROLES } from '../auth/roles';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { FindProductsQueryDto } from './dto/find-products-query.dto';
+import { SimilarProductsQueryDto } from './dto/similar-products-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductsService } from './products.service';
 
@@ -78,9 +79,9 @@ export class ProductsController {
   @Get()
   @ApiOperation({
     summary:
-      'Get all products (public)',
+      'Get storefront products with filters and pagination',
     description:
-      'Use categoryId to filter products, for example: /api/products?categoryId=1',
+      'Supports categoryId, search, price range, color, discount range, sorting, page and limit.',
   })
   findAll(
     @Query()
@@ -88,8 +89,32 @@ export class ProductsController {
       FindProductsQueryDto,
   ) {
     return this.productsService
-      .findAll(
-        query.categoryId,
+      .findAll(query);
+  }
+
+  @Get(':id/similar')
+  @ApiOperation({
+    summary:
+      'Get random similar products from the same category',
+  })
+  @ApiParam({
+    name: 'id',
+    example: 1,
+  })
+  findSimilar(
+    @Param(
+      'id',
+      ParseIntPipe,
+    )
+    id: number,
+    @Query()
+    query:
+      SimilarProductsQueryDto,
+  ) {
+    return this.productsService
+      .findSimilar(
+        id,
+        query.limit,
       );
   }
 
@@ -156,7 +181,6 @@ export class ProductsController {
       ParseIntPipe,
     )
     id: number,
-
     @Body()
     dto: UpdateProductDto,
   ) {
@@ -184,14 +208,6 @@ export class ProductsController {
     name: 'id',
     example: 1,
   })
-  @ApiOkResponse({
-    schema: {
-      example: {
-        message:
-          'Product deleted successfully',
-      },
-    },
-  })
   @ApiUnauthorizedResponse({
     description:
       'Login required',
@@ -199,10 +215,6 @@ export class ProductsController {
   @ApiForbiddenResponse({
     description:
       'ADMIN role required',
-  })
-  @ApiNotFoundResponse({
-    description:
-      'Product not found',
   })
   remove(
     @Param(

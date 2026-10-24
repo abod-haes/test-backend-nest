@@ -7,6 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  passwordHash  String
+  role          String         @default("USER")
+  cartItems     UserCartItem[]
+  orders        Order[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
 model Category {
   id          Int       @id @default(autoincrement())
   name        String    @unique
@@ -17,16 +29,26 @@ model Category {
 }
 
 model Product {
-  id          Int        @id @default(autoincrement())
-  name        String
-  description String
-  price       Float
-  imageUrl    String?
-  categoryId  Int
-  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  cartItem    CartItem?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id              Int            @id @default(autoincrement())
+  name            String
+  description     String
+  price           Float
+  imageUrl        String?
+  color           String?
+  discountPercent Int            @default(0)
+  stock           Int            @default(100)
+  categoryId      Int
+  category        Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  // Legacy training cart kept so existing SQLite data is not destroyed by db push.
+  cartItem        CartItem?
+
+  userCartItems   UserCartItem[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([categoryId])
+  @@index([price])
 }
 
 model CartItem {
@@ -36,4 +58,57 @@ model CartItem {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model UserCartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int      @default(1)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Order {
+  id              Int         @id @default(autoincrement())
+  userId          Int
+  user            User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status          String      @default("PLACED")
+  paymentMethod   String
+  shippingName    String
+  shippingAddress String
+  shippingCity    String?
+  shippingPhone   String
+  promoCode       String?
+  subtotal        Float
+  productDiscount Float       @default(0)
+  promoDiscount   Float       @default(0)
+  deliveryFee     Float       @default(0)
+  total           Float
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id              Int      @id @default(autoincrement())
+  orderId         Int
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       Int
+  productName     String
+  imageUrl        String?
+  unitPrice       Float
+  discountPercent Int      @default(0)
+  quantity        Int
+  lineTotal       Float
+  createdAt       DateTime @default(now())
+
+  @@index([orderId])
 }

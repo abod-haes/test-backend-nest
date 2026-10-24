@@ -20,9 +20,9 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Furniture Store API')
     .setDescription(
-      'Training API for Products, Categories, Cart, Authentication and Roles.',
+      'Training storefront API for authentication, products, filters, pagination, user cart, checkout and orders.',
     )
-    .setVersion('2.0')
+    .setVersion('3.0')
     .addBearerAuth()
     .build();
 
