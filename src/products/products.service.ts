@@ -6,7 +6,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { FindProductsQueryDto } from './dto/find-products-query.dto';
+import { FindCatalogProductsQueryDto } from './dto/find-catalog-products-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PRODUCT_COLOR_OPTIONS } from './product-color.enum';
 
@@ -46,8 +46,16 @@ export class ProductsService {
     });
   }
 
-  async findAll(
-    query: FindProductsQueryDto,
+  findAll(categoryId?: number) {
+    return this.prisma.product.findMany({
+      where: categoryId ? { categoryId } : undefined,
+      include: { category: true },
+      orderBy: { id: 'asc' },
+    });
+  }
+
+  async findCatalog(
+    query: FindCatalogProductsQueryDto,
   ) {
     if (
       query.minPrice !== undefined &&

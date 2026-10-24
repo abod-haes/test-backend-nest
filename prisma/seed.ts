@@ -20,10 +20,8 @@ async function ensureProduct(product: SeedProduct) {
   });
 
   if (existing) {
-    return prisma.product.update({
-      where: { id: existing.id },
-      data: product,
-    });
+    // Do not replace student edits or reset stock on every deployment.
+    return existing;
   }
 
   return prisma.product.create({
@@ -34,11 +32,7 @@ async function ensureProduct(product: SeedProduct) {
 async function main() {
   const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
-    update: {
-      name: 'Training Admin',
-      passwordHash: hashPassword('Admin123!'),
-      role: 'ADMIN',
-    },
+    update: {},
     create: {
       name: 'Training Admin',
       email: 'admin@example.com',
@@ -49,11 +43,7 @@ async function main() {
 
   const student = await prisma.user.upsert({
     where: { email: 'student@example.com' },
-    update: {
-      name: 'Training Student',
-      passwordHash: hashPassword('Student123!'),
-      role: 'USER',
-    },
+    update: {},
     create: {
       name: 'Training Student',
       email: 'student@example.com',
@@ -64,7 +54,7 @@ async function main() {
 
   const bedroom = await prisma.category.upsert({
     where: { name: 'Bedroom' },
-    update: { description: 'Furniture for bedrooms' },
+    update: {},
     create: {
       name: 'Bedroom',
       description: 'Furniture for bedrooms',
@@ -73,7 +63,7 @@ async function main() {
 
   const livingRoom = await prisma.category.upsert({
     where: { name: 'Living Room' },
-    update: { description: 'Sofas, chairs and living room furniture' },
+    update: {},
     create: {
       name: 'Living Room',
       description: 'Sofas, chairs and living room furniture',
@@ -82,7 +72,7 @@ async function main() {
 
   const homeOffice = await prisma.category.upsert({
     where: { name: 'Home Office' },
-    update: { description: 'Furniture for work and study spaces' },
+    update: {},
     create: {
       name: 'Home Office',
       description: 'Furniture for work and study spaces',
@@ -91,7 +81,7 @@ async function main() {
 
   const diningTable = await prisma.category.upsert({
     where: { name: 'Dining Table' },
-    update: { description: 'Dining room furniture' },
+    update: {},
     create: {
       name: 'Dining Table',
       description: 'Dining room furniture',
@@ -100,7 +90,7 @@ async function main() {
 
   const more = await prisma.category.upsert({
     where: { name: 'More' },
-    update: { description: 'Other furniture' },
+    update: {},
     create: {
       name: 'More',
       description: 'Other furniture',

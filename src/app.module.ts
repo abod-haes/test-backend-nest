@@ -6,6 +6,7 @@ import { HealthController } from './health.controller';
 import { OrdersModule } from './orders/orders.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
+import { UserCartModule } from './user-cart/user-cart.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ProductsModule } from './products/products.module';
     CategoriesModule,
     ProductsModule,
     CartModule,
+    UserCartModule,
     OrdersModule,
   ],
   controllers: [

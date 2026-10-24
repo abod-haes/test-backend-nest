@@ -57,13 +57,24 @@ Protected endpoints use:
 Authorization: Bearer TOKEN
 ```
 
-## Storefront products
+## API backwards compatibility
 
-```text
-GET /api/products
+The old endpoints keep their original response shapes and authorization behavior:
+
+- `GET /api/products` returns a plain array of products (with optional `categoryId`).
+- `GET /api/products/:id` returns a single product object.
+- All legacy `/api/cart` routes continue using the original shared training cart and do **not** require a token.
+- Categories and `/api/auth/login` / `/api/auth/me` retain their established response shapes.
+
+New features are exposed separately so existing React code can keep using `response.data.map(...)`.
+
+## New catalog endpoint
+
+```http
+GET /api/products/catalog?categoryId=2&minPrice=20&maxPrice=100&color=Gray&page=1&limit=9&sortBy=price&sortOrder=asc
 ```
 
-Supported query parameters:
+Optional catalog query params:
 
 ```text
 categoryId
@@ -79,13 +90,7 @@ sortBy=id|name|price|discountPercent|createdAt
 sortOrder=asc|desc
 ```
 
-Example:
-
-```text
-GET /api/products?categoryId=2&minPrice=20&maxPrice=100&color=Gray&page=1&limit=9&sortBy=price&sortOrder=asc
-```
-
-Response:
+Catalog response (only on this new endpoint):
 
 ```json
 {
@@ -101,17 +106,14 @@ Response:
 }
 ```
 
-Similar products:
+Other new endpoints:
 
 ```text
+GET /api/products/colors
 GET /api/products/:id/similar?limit=4
 ```
 
-Results are randomly shuffled from the same category on each request.
-
-## User cart
-
-All cart endpoints require login.
+## Legacy cart (unchanged)
 
 ```text
 POST   /api/cart
@@ -121,16 +123,21 @@ DELETE /api/cart/:cartItemId
 DELETE /api/cart
 ```
 
-Add:
+This remains the original shared training cart with the same response bodies.
+Do not connect a new account-based storefront to the legacy cart.
 
-```json
-{
-  "productId": 1,
-  "quantity": 1
-}
+## New user cart (requires Bearer token)
+
+```text
+POST   /api/my-cart
+GET    /api/my-cart
+PATCH  /api/my-cart/:cartItemId
+DELETE /api/my-cart/:cartItemId
+DELETE /api/my-cart
 ```
 
-The cart is now isolated per logged-in user.
+The user-specific cart works with `POST /api/orders/checkout`.
+Checkout does not use the old shared cart.
 
 ## Checkout and orders
 
@@ -215,7 +222,7 @@ Response:
 Filter using the exact `value` field, with case preserved:
 
 ```http
-GET /api/products?color=Gray&page=1&limit=9
+GET /api/products/catalog?color=Gray&page=1&limit=9
 ```
 
 Create/update products with `"color":"Gray"`, not `"color":"GRAY"`
