@@ -8,12 +8,17 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { FindProductsQueryDto } from './dto/find-products-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { PRODUCT_COLOR_OPTIONS } from './product-color.enum';
 
 @Injectable()
 export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
   ) {}
+
+  getColors() {
+    return PRODUCT_COLOR_OPTIONS;
+  }
 
   private async ensureCategoryExists(
     categoryId: number,
@@ -97,8 +102,8 @@ export class ProductsService {
       };
     }
 
-    if (query.color?.trim()) {
-      where.color = query.color.trim();
+    if (query.color) {
+      where.color = query.color;
     }
 
     if (

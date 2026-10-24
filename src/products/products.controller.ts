@@ -92,6 +92,17 @@ export class ProductsController {
       .findAll(query);
   }
 
+  @Get('colors')
+  @ApiOperation({
+    summary: 'List supported product colors for filter controls',
+  })
+  @ApiOkResponse({
+    description: 'Available color enum values, labels, and swatch hex codes',
+  })
+  getColors() {
+    return this.productsService.getColors();
+  }
+
   @Get(':id/similar')
   @ApiOperation({
     summary:

@@ -187,3 +187,36 @@ npm run start:dev
 ```text
 /api/docs
 ```
+
+## Product color enum
+
+The backend uses `ProductColor` values for both product create/update and filtering.
+The SQLite `Product.color` column remains `String?` for compatibility with existing
+data. The Nest DTOs validate color against the shared TypeScript enum.
+
+Public endpoint for building the filter UI:
+
+```http
+GET /api/products/colors
+```
+
+Response:
+
+```json
+[
+  {"value":"Black","label":"Black","hex":"#171717"},
+  {"value":"White","label":"White","hex":"#FFFFFF"},
+  {"value":"Gray","label":"Gray","hex":"#9CA3AF"}
+]
+```
+
+(The real endpoint returns every supported color, not just these three examples.)
+
+Filter using the exact `value` field, with case preserved:
+
+```http
+GET /api/products?color=Gray&page=1&limit=9
+```
+
+Create/update products with `"color":"Gray"`, not `"color":"GRAY"`
+or arbitrary text. Invalid values return HTTP 400.

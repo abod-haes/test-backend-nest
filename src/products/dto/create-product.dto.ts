@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ProductColor } from '../product-color.enum';
 import {
+  IsEnum,
   IsInt,
   IsNumber,
   IsOptional,
@@ -47,13 +49,14 @@ export class CreateProductDto {
   imageUrl?: string;
 
   @ApiPropertyOptional({
-    example: 'Gray',
-    description: 'Color family used by storefront filters',
+    enum: ProductColor,
+    enumName: 'ProductColor',
+    example: ProductColor.GRAY,
+    description: 'One of the supported color families',
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  color?: string;
+  @IsEnum(ProductColor)
+  color?: ProductColor;
 
   @ApiPropertyOptional({
     example: 20,
