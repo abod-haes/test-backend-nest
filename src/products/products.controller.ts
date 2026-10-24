@@ -27,6 +27,7 @@ import { USER_ROLES } from '../auth/roles';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { FindProductsQueryDto } from './dto/find-products-query.dto';
+import { FindCatalogProductsQueryDto } from './dto/find-catalog-products-query.dto';
 import { SimilarProductsQueryDto } from './dto/similar-products-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductsService } from './products.service';
@@ -78,18 +79,25 @@ export class ProductsController {
 
   @Get()
   @ApiOperation({
-    summary:
-      'Get storefront products with filters and pagination',
-    description:
-      'Supports categoryId, search, price range, color, discount range, sorting, page and limit.',
+    summary: 'List products (legacy array response, public)',
+    description: 'Backward compatible: returns an array, optionally filtered by categoryId.',
   })
   findAll(
     @Query()
-    query:
-      FindProductsQueryDto,
+    query: FindProductsQueryDto,
   ) {
-    return this.productsService
-      .findAll(query);
+    return this.productsService.findAll(query.categoryId);
+  }
+
+  @Get('catalog')
+  @ApiOperation({
+    summary: 'Browse catalog with search, filters, sorting and pagination',
+    description: 'New endpoint returning { items, pagination }. Existing GET /products stays an array.',
+  })
+  findCatalog(
+    @Query() query: FindCatalogProductsQueryDto,
+  ) {
+    return this.productsService.findCatalog(query);
   }
 
   @Get('colors')

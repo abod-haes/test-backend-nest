@@ -7,158 +7,106 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Request,
-  UseGuards,
 } from '@nestjs/common';
 import {
-  ApiBearerAuth,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
-type AuthRequest = {
-  user: {
-    sub: number;
-  };
-};
-
 @ApiTags('Cart')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('cart')
 export class CartController {
-  constructor(
-    private readonly cartService:
-      CartService,
-  ) {}
+  constructor(private readonly cartService: CartService) {}
 
   @Post()
   @ApiOperation({
-    summary:
-      'Add a product to the logged-in user cart',
+    summary: 'Add a product to cart',
     description:
-      'If the product already exists in this user cart, quantity is increased.',
+      'If the product is already in the cart, its quantity will be increased.',
   })
   @ApiCreatedResponse({
-    description:
-      'Product added to cart',
-  })
-  @ApiUnauthorizedResponse({
-    description:
-      'Login required',
-  })
-  @ApiNotFoundResponse({
-    description:
-      'Product not found',
-  })
-  add(
-    @Request()
-    request: AuthRequest,
-    @Body()
-    dto: AddToCartDto,
-  ) {
-    return this.cartService.add(
-      request.user.sub,
-      dto,
-    );
-  }
-
-  @Get()
-  @ApiOperation({
-    summary:
-      'Get the logged-in user cart and totals',
-  })
-  findAll(
-    @Request()
-    request: AuthRequest,
-  ) {
-    return this.cartService.findAll(
-      request.user.sub,
-    );
-  }
-
-  @Patch(':id')
-  @ApiOperation({
-    summary:
-      'Change one cart item quantity',
-  })
-  @ApiParam({
-    name: 'id',
-    example: 1,
-    description:
-      'User cart item id',
-  })
-  update(
-    @Request()
-    request: AuthRequest,
-    @Param(
-      'id',
-      ParseIntPipe,
-    )
-    id: number,
-    @Body()
-    dto:
-      UpdateCartItemDto,
-  ) {
-    return this.cartService.update(
-      request.user.sub,
-      id,
-      dto,
-    );
-  }
-
-  @Delete(':id')
-  @ApiOperation({
-    summary:
-      'Remove one item from the logged-in user cart',
-  })
-  @ApiParam({
-    name: 'id',
-    example: 1,
-  })
-  remove(
-    @Request()
-    request: AuthRequest,
-    @Param(
-      'id',
-      ParseIntPipe,
-    )
-    id: number,
-  ) {
-    return this.cartService.remove(
-      request.user.sub,
-      id,
-    );
-  }
-
-  @Delete()
-  @ApiOperation({
-    summary:
-      'Clear the logged-in user cart',
-  })
-  @ApiOkResponse({
     schema: {
       example: {
-        message:
-          'Cart cleared successfully',
+        id: 1,
+        productId: 1,
+        quantity: 2,
+        product: {
+          id: 1,
+          name: 'Stylish Soft Chair',
+          description: 'A comfortable soft chair for modern living rooms.',
+          price: 20,
+          categoryId: 1,
+        },
       },
     },
   })
-  clear(
-    @Request()
-    request: AuthRequest,
+  @ApiNotFoundResponse({ description: 'Product not found' })
+  add(@Body() dto: AddToCartDto) {
+    return this.cartService.add(dto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get cart items and totals' })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        items: [
+          {
+            id: 1,
+            productId: 1,
+            quantity: 2,
+            product: {
+              id: 1,
+              name: 'Stylish Soft Chair',
+              price: 20,
+            },
+          },
+        ],
+        totalItems: 2,
+        totalPrice: 40,
+      },
+    },
+  })
+  findAll() {
+    return this.cartService.findAll();
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Change cart item quantity' })
+  @ApiParam({ name: 'id', example: 1, description: 'Cart item id' })
+  @ApiOkResponse({ description: 'Cart item quantity updated' })
+  @ApiNotFoundResponse({ description: 'Cart item not found' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCartItemDto,
   ) {
-    return this.cartService.clear(
-      request.user.sub,
-    );
+    return this.cartService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Remove one item from cart' })
+  @ApiParam({ name: 'id', example: 1, description: 'Cart item id' })
+  @ApiOkResponse({
+    schema: { example: { message: 'Cart item removed successfully' } },
+  })
+  @ApiNotFoundResponse({ description: 'Cart item not found' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.cartService.remove(id);
+  }
+
+  @Delete()
+  @ApiOperation({ summary: 'Clear the whole cart' })
+  @ApiOkResponse({
+    schema: { example: { message: 'Cart cleared successfully' } },
+  })
+  clear() {
+    return this.cartService.clear();
   }
 }
