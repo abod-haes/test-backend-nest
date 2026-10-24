@@ -1,6 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { ProductColor } from '../product-color.enum';
 import {
+  IsEnum,
   IsIn,
   IsInt,
   IsNumber,
@@ -46,13 +48,14 @@ export class FindProductsQueryDto {
   maxPrice?: number;
 
   @ApiPropertyOptional({
-    example: 'Gray',
-    description: 'Color family',
+    enum: ProductColor,
+    enumName: 'ProductColor',
+    example: ProductColor.GRAY,
+    description: 'Filter by one supported color family',
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  color?: string;
+  @IsEnum(ProductColor)
+  color?: ProductColor;
 
   @ApiPropertyOptional({ example: 10 })
   @IsOptional()
